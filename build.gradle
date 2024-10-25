@@ -17,6 +17,7 @@ dependencies {
     implementation 'org.keycloak:keycloak-authz-client:25.0.2'
 
     implementation 'io.quarkus:quarkus-arc'
+    implementation 'org.yaml:snakeyaml:2.3'
     testImplementation 'io.quarkus:quarkus-junit5'
 }
 

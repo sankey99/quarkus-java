@@ -3,13 +3,14 @@ package com.cs.grpc.interceotor;
 /**
  * Created by Santosh Choudhary on 2024-10-04.
  */
-import io.grpc.*;
-import io.quarkus.grpc.runtime.annotations.GrpcGlobalInterceptor;
-import javax.enterprise.context.ApplicationScoped;
 
-@GrpcGlobalInterceptor
+import io.grpc.*;
+import io.quarkus.grpc.GlobalInterceptor;
+import jakarta.enterprise.context.ApplicationScoped;
+
+@GlobalInterceptor
 @ApplicationScoped
-public class ResponseAndErrorTransformInterceptor implements ServerInterceptor {
+public class ResponseInterceptor implements ServerInterceptor {
 
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(

@@ -19,6 +19,8 @@ dependencies {
     implementation 'io.quarkus:quarkus-arc'
     implementation 'org.yaml:snakeyaml:2.3'
     testImplementation 'io.quarkus:quarkus-junit5'
+    implementation 'org.jboss:jandex:2.4.3.Final'
+
 }
 
 group 'com.cs.grpc'

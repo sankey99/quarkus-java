@@ -1,0 +1,26 @@
+# Use the official GraalVM image with JDK 21 support
+FROM ghcr.io/graalvm/graalvm-ce:latest-jdk21
+
+# Install necessary tools (e.g., curl, unzip)
+RUN microdnf install -y curl unzip && \
+    microdnf clean all
+
+# Install Native Image
+RUN gu install native-image
+
+# Set environment variables for GraalVM and JDK 21
+ENV JAVA_HOME=/opt/graalvm-ce-java21
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+# Install Gradle
+ENV GRADLE_VERSION=8.5
+RUN curl -fsSL https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -o gradle.zip && \
+    unzip gradle.zip -d /opt/gradle && \
+    rm gradle.zip
+ENV PATH=/opt/gradle/gradle-${GRADLE_VERSION}/bin:$PATH
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Default command to print GraalVM and Java versions
+CMD ["java", "-version"]

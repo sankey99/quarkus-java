@@ -1,0 +1,28 @@
+# Use an official OpenJDK 21 base image
+FROM openjdk:21-jdk-slim
+
+# Set environment variables for Gradle
+ENV GRADLE_VERSION=8.5 \
+    GRADLE_HOME=/opt/gradle \
+    PATH=/opt/gradle/bin:$PATH
+
+# Install dependencies: curl and unzip to download and extract Gradle
+RUN apt-get update && apt-get install -y \
+    curl \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download and install Gradle
+RUN mkdir /opt/gradle && \
+    curl -fsSL https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -o gradle.zip && \
+    unzip gradle.zip -d /opt/gradle && \
+    rm gradle.zip
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Set up a volume for Gradle caches to improve build performance
+VOLUME /home/gradle/.gradle
+
+# Default command to display Gradle version when container runs
+CMD ["gradle", "--version"]

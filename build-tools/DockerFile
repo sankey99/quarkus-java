@@ -1,16 +1,14 @@
-# Use an official OpenJDK 21 base image
-FROM openjdk:21-jdk-slim
+# Use the Red Hat UBI 8 image with OpenJDK 21
+FROM registry.access.redhat.com/ubi8/openjdk-21
 
 # Set environment variables for Gradle
-ENV GRADLE_VERSION=8.5 \
-    GRADLE_HOME=/opt/gradle \
-    PATH=/opt/gradle/bin:$PATH
+ENV GRADLE_VERSION=8.5
+ENV GRADLE_HOME=/opt/gradle
+ENV PATH=$GRADLE_HOME/bin:$PATH
 
-# Install dependencies: curl and unzip to download and extract Gradle
-RUN apt-get update && apt-get install -y \
-    curl \
-    unzip \
-    && rm -rf /var/lib/apt/lists/*
+# Install necessary dependencies: curl and unzip to download and extract Gradle
+RUN microdnf install -y curl unzip && \
+    microdnf clean all
 
 # Download and install Gradle
 RUN mkdir /opt/gradle && \
@@ -18,11 +16,8 @@ RUN mkdir /opt/gradle && \
     unzip gradle.zip -d /opt/gradle && \
     rm gradle.zip
 
-# Set the working directory inside the container
+# Set working directory inside the container
 WORKDIR /app
 
-# Set up a volume for Gradle caches to improve build performance
-VOLUME /home/gradle/.gradle
-
-# Default command to display Gradle version when container runs
+# Default command: Display Gradle version
 CMD ["gradle", "--version"]

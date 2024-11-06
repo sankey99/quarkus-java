@@ -1,0 +1,16 @@
+
+
+
+FROM registry.access.redhat.com/ubi8/openjdk-21
+
+# Disable fastestmirror plugin and allow unavailable repos to be skipped
+RUN echo "fastestmirror=False" >> /etc/dnf/dnf.conf && \
+    echo "skip_if_unavailable=True" >> /etc/dnf/dnf.conf
+
+# Add retry logic to handle intermittent 503 errors
+RUN bash -c 'for i in {1..5}; do microdnf install -y curl unzip && break || sleep 5; done'
+
+# Optionally, disable SSL verification if you're having SSL issues (not recommended for production)
+# RUN sed -i 's/sslverify=1/sslverify=0/' /etc/yum.repos.d/*.repo
+
+WORKDIR /app

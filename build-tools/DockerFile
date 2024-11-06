@@ -6,6 +6,20 @@ ENV GRADLE_VERSION=8.5
 ENV GRADLE_HOME=/opt/gradle
 ENV PATH=$GRADLE_HOME/bin:$PATH
 
+# Copy the self-signed certificate to the correct location
+# Replace /path/to/your-certificate.crt with the actual path to your cert on your host machine
+COPY /path/to/your-certificate.crt /etc/pki/ca-trust/source/anchors/
+
+# Update CA trust to include the new certificate
+RUN update-ca-trust
+
+# Install your packages using microdnf after certificates have been updated
+RUN microdnf install -y curl unzip && \
+    microdnf clean all
+
+# Set up your application or further configurations...
+
+
 # Install necessary dependencies: curl and unzip to download and extract Gradle
 RUN microdnf install -y curl unzip && \
     microdnf clean all

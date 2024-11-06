@@ -1,37 +1,15 @@
-# Use the Red Hat UBI 8 image with OpenJDK 21
+# Use UBI8 with OpenJDK 21
 FROM registry.access.redhat.com/ubi8/openjdk-21
 
 # Set environment variables for Gradle
-ENV GRADLE_VERSION=8.5
-ENV GRADLE_HOME=/opt/gradle
-ENV PATH=$GRADLE_HOME/bin:$PATH
+ENV GRADLE_HOME /opt/gradle
+ENV PATH $GRADLE_HOME/bin:$PATH
 
-# Copy the self-signed certificate to the correct location
-# Replace /path/to/your-certificate.crt with the actual path to your cert on your host machine
-COPY /path/to/your-certificate.crt /etc/pki/ca-trust/source/anchors/
+# Copy the local Gradle installation into the Docker image
+COPY /path/to/gradle /opt/gradle
 
-# Update CA trust to include the new certificate
-RUN update-ca-trust
-
-# Install your packages using microdnf after certificates have been updated
-RUN microdnf install -y curl unzip && \
-    microdnf clean all
-
-# Set up your application or further configurations...
-
-
-# Install necessary dependencies: curl and unzip to download and extract Gradle
-RUN microdnf install -y curl unzip && \
-    microdnf clean all
-
-# Download and install Gradle
-RUN mkdir /opt/gradle && \
-    curl -fsSL https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -o gradle.zip && \
-    unzip gradle.zip -d /opt/gradle && \
-    rm gradle.zip
-
-# Set working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Default command: Display Gradle version
-CMD ["gradle", "--version"]
+# Verify Gradle installation (optional step)
+RUN gradle --version

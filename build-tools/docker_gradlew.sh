@@ -14,6 +14,13 @@ convert_path() {
   fi
 }
 
+# Detect if running in Windows (Git Bash) or Linux
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+  echo "Running on Windows (Git Bash)..."
+else
+  echo "Running on Linux..."
+fi
+
 # Local directories to mount into the container
 PROJECT_DIR=$(pwd)
 MAVEN_LOCAL_REPO="$HOME/.m2"
@@ -25,6 +32,12 @@ PROJECT_DIR_DOCKER=$(convert_path "$PROJECT_DIR")
 MAVEN_LOCAL_REPO_DOCKER=$(convert_path "$MAVEN_LOCAL_REPO")
 GRADLE_CACHE_DOCKER=$(convert_path "$GRADLE_CACHE")
 MAVEN_SETTINGS_DOCKER=$(convert_path "$MAVEN_SETTINGS")
+
+# Output the converted paths for debugging
+echo "Project directory (Docker): $PROJECT_DIR_DOCKER"
+echo "Maven local repo (Docker): $MAVEN_LOCAL_REPO_DOCKER"
+echo "Gradle cache (Docker): $GRADLE_CACHE_DOCKER"
+echo "Maven settings (Docker): $MAVEN_SETTINGS_DOCKER"
 
 # Run the Gradle command inside the Docker container
 docker run --rm \

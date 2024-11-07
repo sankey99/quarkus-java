@@ -45,3 +45,29 @@ RUN keytool -importcert \
 
 # Example: Run the application (adjust accordingly)
 # CMD ["java", "-jar", "/app/myapp.jar"]
+
+#!/bin/bash
+
+# Set your image name
+IMAGE_NAME="java-app-with-cert"
+CONTAINER_NAME="my-running-container"
+
+# Check if the container is running
+CONTAINER_ID=$(docker ps --filter "name=$CONTAINER_NAME" --filter "ancestor=$IMAGE_NAME" -q)
+
+if [ -n "$CONTAINER_ID" ]; then
+  echo "Container is already running. Executing a command inside the container..."
+
+  # Run your command inside the running container (e.g., 'bash')
+  docker exec -it $CONTAINER_ID bash
+
+else
+  echo "Container is not running. Starting a new container from the image..."
+
+  # Start a new container from the image
+  docker run -d --name $CONTAINER_NAME $IMAGE_NAME
+
+  # Optionally run a command inside the new container
+  docker exec -it $CONTAINER_NAME bash
+fi
+

@@ -14,3 +14,34 @@ RUN bash -c 'for i in {1..5}; do microdnf install -y curl unzip && break || slee
 # RUN sed -i 's/sslverify=1/sslverify=0/' /etc/yum.repos.d/*.repo
 
 WORKDIR /app
+
+
+docker run --rm java-app-with-cert keytool -list -keystore $JAVA_HOME/lib/security/cacerts -storepass changeit
+# Use JBoss OpenJDK 21 base image
+FROM registry.access.redhat.com/ubi8/openjdk-21:1.17
+
+# Set environment variables for Java
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+ENV PATH="$JAVA_HOME/bin:$PATH"
+
+# Copy the certificate into the image
+COPY mycert.crt /usr/local/share/ca-certificates/mycert.crt
+
+# Import the certificate into the Java TrustStore
+RUN keytool -importcert \
+    -noprompt \
+    -trustcacerts \
+    -alias mycert \
+    -file /usr/local/share/ca-certificates/mycert.crt \
+    -keystore $JAVA_HOME/lib/security/cacerts \
+    -storepass changeit
+
+# Continue with your application setup...
+# Example: Copy the application JAR (if you have one)
+# COPY target/myapp.jar /app/myapp.jar
+
+# Example: Expose a port for the application (adjust accordingly)
+# EXPOSE 8080
+
+# Example: Run the application (adjust accordingly)
+# CMD ["java", "-jar", "/app/myapp.jar"]

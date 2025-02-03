@@ -1,0 +1,62 @@
+plugins {
+    id("io.quarkus") version "3.2.3.Final"
+    jacoco
+}
+
+jacoco {
+    toolVersion = "0.8.10"
+}
+
+configurations {
+    create("jacocoAgent")
+}
+
+dependencies {
+    "jacocoAgent"(group = "org.jacoco", name = "org.jacoco.agent", version = "0.8.10", classifier = "runtime")
+}
+
+tasks {
+    // Configure integration tests with explicit JaCoCo agent
+    named<Test>("quarkusIntegrationTest") {
+        group = "Verification"
+        description = "Run Quarkus integration tests"
+        
+        // Critical JVM args for JaCoCo in separate JVM
+        jvmArgs = listOf(
+            "-javaagent:${configurations.jacocoAgent.singleFile}=destfile=${layout.buildDirectory.file("jacoco/quarkusIntegrationTest.exec").get().asFile}"
+        )
+
+        // Ensure proper task ordering
+        shouldRunAfter(named("quarkusTest"))
+        finalizedBy(named("jacocoTestReport"))
+    }
+
+    // Configure main test task
+    named("test") {
+        dependsOn(named("quarkusTest"), named("quarkusIntegrationTest"))
+    }
+
+    // JaCoCo report configuration
+    jacocoTestReport {
+        dependsOn(named("quarkusTest"), named("quarkusIntegrationTest"))
+        
+        // Merge coverage from both test types
+        executionData.from(
+            fileTree(layout.buildDirectory.dir("jacoco")).include("*.exec")
+        )
+
+        reports {
+            xml.required.set(true)
+            html.required.set(true)
+            html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco"))
+        }
+
+        classDirectories.from(
+            sourceSets.main.get().output.classesDirs
+        )
+        
+        sourceDirectories.from(
+            sourceSets.main.get().allSource.srcDirs
+        )
+    }
+}

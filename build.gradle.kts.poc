@@ -1,0 +1,53 @@
+plugins {
+    jacoco
+}
+
+jacoco {
+    toolVersion = "0.8.10"
+}
+
+// Configure only quarkusIntegrationTest (quarkusTest works out-of-the-box)
+tasks.named<Test>("quarkusIntegrationTest") {
+    configure<JacocoTaskExtension> {
+        // Append to existing data from quarkusTest
+        destinationFile = layout.buildDirectory.file("jacoco/test.exec").get().asFile
+        isEnabled = true
+    }
+    shouldRunAfter(tasks.named("quarkusTest"))
+}
+
+// Configure combined report
+tasks.jacocoTestReport {
+    dependsOn(tasks.named("quarkusTest"), tasks.named("quarkusIntegrationTest"))
+
+    // Automatically detect all .exec files including quarkusTest's default
+    executionData.from(fileTree(layout.buildDirectory.dir("jacoco")).include("*.exec"))
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        html.outputLocation.set(layout.buildDirectory.dir("jacoco-report"))
+    }
+
+    classDirectories.from(
+        sourceSets.main.get().output.classesDirs
+    )
+
+    sourceDirectories.from(
+        sourceSets.main.get().allSource.srcDirs
+    )
+}
+
+// Optional verification
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+    executionData.from(tasks.jacocoTestReport.get().executionData)
+
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.80".toBigDecimal()
+            }
+        }
+    }
+}

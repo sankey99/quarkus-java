@@ -20,7 +20,7 @@ tasks {
     named<Test>("quarkusIntegrationTest") {
         group = "Verification"
         description = "Run Quarkus integration tests"
-        
+
         // Critical JVM args for JaCoCo in separate JVM
         jvmArgs = listOf(
             "-javaagent:${configurations.jacocoAgent.singleFile}=destfile=${layout.buildDirectory.file("jacoco/quarkusIntegrationTest.exec").get().asFile}"
@@ -39,7 +39,7 @@ tasks {
     // JaCoCo report configuration
     jacocoTestReport {
         dependsOn(named("quarkusTest"), named("quarkusIntegrationTest"))
-        
+
         // Merge coverage from both test types
         executionData.from(
             fileTree(layout.buildDirectory.dir("jacoco")).include("*.exec")
@@ -54,9 +54,30 @@ tasks {
         classDirectories.from(
             sourceSets.main.get().output.classesDirs
         )
-        
+
         sourceDirectories.from(
             sourceSets.main.get().allSource.srcDirs
         )
     }
+}
+
+
+///
+
+configurations {
+    create("jacocoAgent") {
+        isCanBeResolved = true
+        isCanBeConsumed = false
+    }
+}
+
+dependencies {
+    "jacocoAgent"("org.jacoco:org.jacoco.agent:0.8.10:runtime")
+}
+
+// Usage in quarkusIntegrationTest task
+tasks.named<Test>("quarkusIntegrationTest") {
+    jvmArgs = listOf(
+        "-javaagent:${configurations.named("jacocoAgent").get().singleFile}=destfile=${layout.buildDirectory.file("jacoco/quarkusIntegrationTest.exec").get().asFile}"
+    )
 }

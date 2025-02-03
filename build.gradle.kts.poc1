@@ -81,3 +81,43 @@ tasks.named<Test>("quarkusIntegrationTest") {
         "-javaagent:${configurations.named("jacocoAgent").get().singleFile}=destfile=${layout.buildDirectory.file("jacoco/quarkusIntegrationTest.exec").get().asFile}"
     )
 }
+
+/////////
+plugins {
+    id("io.quarkus") version "3.2.3.Final"
+}
+
+tasks {
+    // Configure integration tests (equivalent of failsafe-plugin)
+    named<Test>("quarkusIntegrationTest") {
+        systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
+
+        // Use project properties for configuration
+        systemProperty("maven.home", project.properties["maven.home"]?.toString() ?: "")
+
+        // Pass through JVM arguments including Jacoco agent
+        systemProperty(
+            "quarkus.test.arg-line",
+            (project.properties["argLine"]?.toString() ?: "") + " " + jvmArgs?.joinToString(" ")
+        )
+
+        // Configure as verification task
+        group = "Verification"
+        description = "Run Quarkus integration tests"
+
+        // Mimic Maven's verify phase
+        mustRunAfter(named("quarkusTest"))
+    }
+
+    // Include integration tests in check lifecycle
+    named("check") {
+        dependsOn(named("quarkusIntegrationTest"))
+    }
+}
+
+// Configure argument line for Jacoco if needed
+if (project.hasProperty("argLine")) {
+    tasks.withType<Test> {
+        jvmArgs(project.properties["argLine"].toString().split(" "))
+    }
+}

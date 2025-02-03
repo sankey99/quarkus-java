@@ -1,53 +1,67 @@
 plugins {
+    id("org.jetbrains.kotlin.jvm") version "1.9.0"
+    id("io.quarkus") version "3.2.3.Final"
     jacoco
 }
 
-jacoco {
-    toolVersion = "0.8.10"
-}
+// Configure common test settings
+tasks.withType<Test> {
+    useJUnitPlatform()
+    systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
 
-// Configure only quarkusIntegrationTest (quarkusTest works out-of-the-box)
-tasks.named<Test>("quarkusIntegrationTest") {
+    // Common JaCoCo configuration
     configure<JacocoTaskExtension> {
-        // Append to existing data from quarkusTest
-        destinationFile = layout.buildDirectory.file("jacoco/test.exec").get().asFile
         isEnabled = true
+        destinationFile = layout.buildDirectory.file("jacoco/${name}.exec").get().asFile
     }
-    shouldRunAfter(tasks.named("quarkusTest"))
 }
 
-// Configure combined report
-tasks.jacocoTestReport {
-    dependsOn(tasks.named("quarkusTest"), tasks.named("quarkusIntegrationTest"))
-
-    // Automatically detect all .exec files including quarkusTest's default
-    executionData.from(fileTree(layout.buildDirectory.dir("jacoco")).include("*.exec"))
-
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-        html.outputLocation.set(layout.buildDirectory.dir("jacoco-report"))
+// Configure test task relationships
+tasks {
+    val quarkusTest by getting(Test::class) {
+        group = "Verification"
+        description = "Run unit tests"
     }
 
-    classDirectories.from(
-        sourceSets.main.get().output.classesDirs
-    )
+    val quarkusIntegrationTest by getting(Test::class) {
+        group = "Verification"
+        description = "Run integration tests"
+        shouldRunAfter(quarkusTest)
+    }
 
-    sourceDirectories.from(
-        sourceSets.main.get().allSource.srcDirs
-    )
-}
+    // Main test lifecycle task
+    register("test") {
+        group = "Verification"
+        description = "Run all tests"
+        dependsOn(quarkusTest, quarkusIntegrationTest)
+        finalizedBy(jacocoTestReport)
+    }
 
-// Optional verification
-tasks.jacocoTestCoverageVerification {
-    dependsOn(tasks.jacocoTestReport)
-    executionData.from(tasks.jacocoTestReport.get().executionData)
+    // JaCoCo report configuration
+    jacocoTestReport {
+        dependsOn(quarkusTest, quarkusIntegrationTest)
 
-    violationRules {
-        rule {
-            limit {
-                minimum = "0.80".toBigDecimal()
-            }
+        executionData.from(
+            fileTree(layout.buildDirectory.dir("jacoco")).include("*.exec")
+        )
+
+        reports {
+            xml.required.set(true)
+            html.required.set(true)
+            html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco"))
         }
+
+        classDirectories.from(
+            sourceSets.main.get().output.classesDirs
+        )
+
+        sourceDirectories.from(
+            sourceSets.main.get().allSource.srcDirs
+        )
+    }
+
+    // Ensure reports are generated even for single test tasks
+    listOf(quarkusTest, quarkusIntegrationTest).forEach { testTask ->
+        testTask.finalizedBy(jacocoTestReport)
     }
 }
